@@ -17,6 +17,7 @@ bad_status="$(curl -sS -o "$tmp_dir/bad.json" -w '%{http_code}' \
   -d '{"name":"missing-url.txt"}' \
   "$api_url/tasks")"
 test "$bad_status" = "400"
+echo "HTTP $bad_status — некорректное задание отклонено"
 
 echo "2/6 Отправка корректного задания"
 task_json="$(python3 -c 'import json,sys; print(json.dumps({"name":"demo-file.txt","url":sys.argv[1]}))' "$source_url")"
@@ -25,6 +26,7 @@ accepted_status="$(curl -sS -o "$tmp_dir/accepted.json" -w '%{http_code}' \
   -d "$task_json" \
   "$api_url/tasks")"
 test "$accepted_status" = "202"
+echo "HTTP $accepted_status — задание принято"
 
 echo "3/6 Ожидание обработки очереди"
 archive_key=""
@@ -47,12 +49,14 @@ echo "4/6 Получение информации об архиве"
 info_status="$(curl -sS -o "$tmp_dir/archive.json" -w '%{http_code}' \
   "$api_url/archives/$archive_key")"
 test "$info_status" = "200"
+echo "HTTP $info_status — метаданные получены"
 python3 -m json.tool "$tmp_dir/archive.json"
 
 echo "5/6 Скачивание и проверка ZIP"
 download_status="$(curl -sS -o "$tmp_dir/archive.zip" -w '%{http_code}' \
   "$api_url/download/$archive_key")"
 test "$download_status" = "200"
+echo "HTTP $download_status — ZIP скачан"
 python3 -m zipfile -l "$tmp_dir/archive.zip"
 
 echo "6/6 Проверка 404"
@@ -60,5 +64,6 @@ missing_key="00000000-0000-7000-8000-000000000000.zip"
 missing_status="$(curl -sS -o "$tmp_dir/missing.json" -w '%{http_code}' \
   "$api_url/archives/$missing_key")"
 test "$missing_status" = "404"
+echo "HTTP $missing_status — отсутствующий архив не найден"
 
 echo "Все smoke-тесты пройдены"
