@@ -1,0 +1,183 @@
+openapi: 3.0.0
+info:
+  title: Система архивирования
+  description: API контрольной работы № 1
+  version: 1.0.0
+
+x-yc-apigateway:
+  service_account_id: ${service_account_id}
+
+paths:
+  /tasks:
+    post:
+      operationId: createTask
+      summary: Создать задание на архивирование
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Задание принято в очередь
+          x-yc-status-mapping: 202
+        '400':
+          description: Некорректное задание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-yc-apigateway-validator:
+        validateRequestBody: true
+      x-yc-apigateway-integration:
+        type: cloud_ymq
+        action: SendMessage
+        queue_url: ${queue_url}
+        folder_id: ${folder_id}
+        payload_format_type: body
+
+  /archives:
+    get:
+      operationId: listArchives
+      summary: Получить список архивов
+      responses:
+        '200':
+          description: Массив метаданных архивов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Archive'
+      x-yc-apigateway-integration:
+        type: cloud_ydb
+        action: Scan
+        database: ${database_path}
+        table_name: archives
+
+  /archives/{key}:
+    get:
+      operationId: getArchive
+      summary: Получить информацию об архиве
+      parameters:
+        - $ref: '#/components/parameters/ArchiveKey'
+      responses:
+        '200':
+          description: Метаданные архива
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Archive'
+        '404':
+          description: Архив не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-yc-apigateway-validator:
+        validateRequestParameters: true
+        validateResponseBody: true
+        validationErrorHandler:
+          x-yc-apigateway-integration:
+            type: dummy
+            http_code: 200
+            http_headers:
+              Content-Type: application/json
+            content:
+              application/json: '{"message":"archive not found"}'
+          statusCode: 404
+      x-yc-apigateway-integration:
+        type: cloud_ydb
+        action: GetItem
+        database: ${database_path}
+        table_name: archives
+        key: '{"key":"{key}"}'
+
+  /download/{key}:
+    get:
+      operationId: downloadArchive
+      summary: Скачать ZIP-архив
+      parameters:
+        - $ref: '#/components/parameters/ArchiveKey'
+      responses:
+        '200':
+          description: ZIP-архив
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Архив не найден
+      x-yc-apigateway-validator:
+        validateRequestParameters: true
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: ${bucket_name}
+        object: '{key}'
+
+  /docs:
+    get:
+      operationId: swaggerUi
+      summary: Интерактивная документация
+      x-yc-apigateway-integration:
+        type: swagger
+
+components:
+  parameters:
+    ArchiveKey:
+      name: key
+      in: path
+      required: true
+      description: Ключ ZIP-архива в формате UUIDv7.zip
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.zip$'
+
+  schemas:
+    Task:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - url
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Имя файла внутри ZIP-архива
+          example: document.pdf
+        url:
+          type: string
+          format: uri
+          pattern: '^https?://'
+          maxLength: 2048
+          description: HTTP(S)-ссылка для скачивания файла
+          example: https://example.com/document.pdf
+
+    Archive:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - url
+        - key
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        key:
+          type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.zip$'
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
