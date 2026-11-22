@@ -21,7 +21,7 @@ variable "folder_id" {
 }
 
 variable "bucket_name" {
-  description = "Глобально уникальное имя бакета с префиксом vvotNN-"
+  description = "Глобально уникальное имя бакета - 01 с префиксом vvot01-"
   type        = string
   nullable    = false
 
@@ -29,8 +29,8 @@ variable "bucket_name" {
     condition = (
       length(var.bucket_name) >= 8 &&
       length(var.bucket_name) <= 63 &&
-      can(regex("^vvot[0-9]{2}-[a-z0-9][a-z0-9.-]*[a-z0-9]$", var.bucket_name))
+      can(regex("^vvot01-[a-z0-9][a-z0-9.-]*[a-z0-9]$", var.bucket_name))
     )
-    error_message = "bucket_name должен быть длиной 8–63 символа и начинаться с vvotNN-, например vvot07-archive-a1b2c3."
+    error_message = "bucket_name должен быть длиной 8–63 символа и начинаться с vvot01-, например vvot01-archive-a1b2c3."
   }
 }

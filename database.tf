@@ -6,13 +6,10 @@ resource "yandex_ydb_database_serverless" "archives" {
   serverless_database {
     enable_throttling_rcu_limit = true
     throttling_rcu_limit        = 10
-    storage_size_limit          = 1024 * 1024 * 1024
+    storage_size_limit          = 1
   }
 }
 
-# Провайдер Yandex создаёт обычные YDB-таблицы, а по заданию нужна документная.
-# Поэтому CreateTable выполняется совместимым DynamoDB HTTP API. Скрипт использует
-# только стандартную библиотеку Python и SigV4, без AWS CLI и четвёртой переменной.
 resource "terraform_data" "archives_table" {
   input = {
     endpoint   = yandex_ydb_database_serverless.archives.document_api_endpoint

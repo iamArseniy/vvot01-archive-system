@@ -59,7 +59,7 @@ class ArchiveFunctionTests(unittest.TestCase):
             ]
         }
 
-        with patch.dict(os.environ, {"BUCKET_NAME": "vvot00-test", "YDB_TABLE_NAME": "archives"}), patch(
+        with patch.dict(os.environ, {"BUCKET_NAME": "vvot01-test", "YDB_TABLE_NAME": "archives"}), patch(
             "index._aws_resources", return_value=(fake_s3, fake_table)
         ), patch("index._download", side_effect=fake_download):
             result = index.handler(event, None)
@@ -67,7 +67,7 @@ class ArchiveFunctionTests(unittest.TestCase):
         self.assertEqual(result["processed"], 1)
         self.assertEqual(fake_table.item["name"], "document.txt")
         self.assertRegex(fake_table.item["key"], r"^[0-9a-f-]{36}\.zip$")
-        self.assertEqual(fake_s3.uploaded[1], "vvot00-test")
+        self.assertEqual(fake_s3.uploaded[1], "vvot01-test")
         self.assertEqual(fake_s3.uploaded[3]["ContentType"], "application/zip")
 
 

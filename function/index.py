@@ -52,7 +52,6 @@ def _safe_filename(name: str) -> str:
 
 
 def _aws_resources() -> tuple[Any, Any]:
-    # Импорт отложен, чтобы чистые функции можно было тестировать без boto3.
     import boto3
 
     session = boto3.session.Session(
@@ -103,7 +102,6 @@ def process_task(task: dict[str, Any]) -> dict[str, str]:
     try:
         table.put_item(Item=item)
     except Exception:
-        # Не оставляем архив без записи в YDB, если сохранение метаданных не удалось.
         s3.delete_object(Bucket=bucket, Key=key)
         raise
     return item

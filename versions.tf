@@ -17,5 +17,5 @@ provider "yandex" {
   cloud_id  = var.cloud_id
   folder_id = var.folder_id
   zone      = "ru-central1-a"
-  # Токен намеренно не указан: провайдер читает его из YC_TOKEN.
+  # провайдер читает токен из YC_TOKEN.
 }

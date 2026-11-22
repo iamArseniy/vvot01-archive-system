@@ -1,6 +1,5 @@
 locals {
-  # Номер студента извлекается из bucket_name, поэтому входных переменных ровно три.
-  prefix = substr(var.bucket_name, 0, 7)
+  prefix = "vvot01-"
 
   runtime_roles = toset([
     "functions.functionInvoker",
