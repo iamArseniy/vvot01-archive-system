@@ -22,15 +22,13 @@ function/test_index.py       модульные тесты
 scripts/manage_ydb_table.py  создание документной таблицы через Document API
 tests/smoke_test.sh          сквозная проверка развёрнутой системы
 *.tf                         Terraform-конфигурация
-SCREENCAST.md                готовый сценарий записи до 15 минут
 ```
 
 ## Почему входных переменных ровно три
 
 Конфигурация принимает только `cloud_id`, `folder_id`, `bucket_name`. Номер
 студента зафиксирован в конфигурации: все именуемые ресурсы получают префикс
-`vvot01-`. Переменная `bucket_name` также обязана начинаться с `vvot01-`.
-Таблица называется строго `archives`, как требует задание.
+`vvot01-`.
 
 ## Предварительные условия
 
@@ -39,8 +37,7 @@ SCREENCAST.md                готовый сценарий записи до 1
 - Yandex Cloud CLI `yc` с выбранными облаком и каталогом;
 - активный платёжный аккаунт и права на создание ресурсов/назначение ролей.
 
-AWS CLI не нужен: `scripts/manage_ydb_table.py` сам подписывает запрос
-Document API по AWS Signature V4.
+`scripts/manage_ydb_table.py` сам подписывает запрос Document API по AWS Signature V4.
 
 ## Настройка и развёртывание
 
@@ -129,16 +126,3 @@ terraform destroy
 - Функция использует временные файлы и потоковое копирование, поэтому исходный
   файл не удерживается целиком в оперативной памяти.
 
-## Публикация
-
-Не коммитьте `terraform.tfvars`, `*.tfstate`, планы и ZIP функции. Пример:
-
-```bash
-git add .
-git commit -m "Implement archive system coursework"
-git branch -M main
-git remote add origin https://github.com/USER/REPOSITORY.git
-git push -u origin main
-```
-
-Сценарий демонстрации находится в [SCREENCAST.md](SCREENCAST.md).
